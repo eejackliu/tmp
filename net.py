@@ -473,10 +473,10 @@ steps = math.ceil(len(glob.glob('data/mask/'+ '*.png')) / batch_size)
 
 
 
-# model=mDeeplab(temp=temperature)
-# model.compile(optimizer=optim,loss={'soft':'binary_crossentropy','stand':'binary_crossentropy'},loss_weights={'soft':1-alpha,'stand':alpha})
-# model.fit_generator(train_data,steps_per_epoch=steps,epochs=1,use_multiprocessing=True, verbose=1,workers=4)
-# keras.models.save_model(model,'distill.h5',include_optimizer=False)
+model=mDeeplab(temp=temperature)
+model.compile(optimizer=optim,loss={'soft':'binary_crossentropy','stand':'binary_crossentropy'},loss_weights={'soft':1-alpha,'stand':alpha})
+model.fit_generator(train_data,steps_per_epoch=steps,epochs=20,use_multiprocessing=True, verbose=2,workers=4)
+keras.models.save_model(model,'distill.h5',include_optimizer=False)
 
 # model=keras.models.load_model('distill.h5')
 # tmp_model=Model(inputs=model.input,outputs=[model.get_layer('logit_label').output,model.get_layer('lambda_1').output])
