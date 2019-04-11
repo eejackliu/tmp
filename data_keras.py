@@ -6,7 +6,7 @@ from PIL import Image as image
 import numpy as np
 voc_colormap = [[0, 0, 0], [245,222,179]]
 class keras_data(keras.utils.Sequence):
-    def __init__(self,root='data/',image_set='train',batch_size=2):
+    def __init__(self,root='data/',image_set='train',batch_size=2,temp=1):
         super(keras_data,self).__init__()
         self.root=os.path.expanduser(root)
         self.image_set=image_set
@@ -20,6 +20,9 @@ class keras_data(keras.utils.Sequence):
 
         self.image=[os.path.join(image_dir,x+'.jpg') for x in self.file_name]
         self.mask=[os.path.join(mask_dir,x+'.png') for x in self.file_name]
+        if self.image_set=='train':
+            self.softmask=np.load('logits.npy')/temp
+            self.softmask=1/(1+np.exp(-self.softmask))
         assert (len(self.image)==len(self.mask))
     def __len__(self):
         return math.ceil(len(self.file_name)/self.batch_size)
@@ -29,6 +32,7 @@ class keras_data(keras.utils.Sequence):
         try:
            img=self.image[item*self.batch_size:(item+1)*self.batch_size]
            mask=self.mask[item*self.batch_size:(item+1)*self.batch_size]
+
            mask=np.array([np.array(image.open(i))/255 for i in mask])
            mask_t=mask[:,:,:,None]
            img_t=np.array([np.array(image.open(i).convert('RGB')) for i in img]).astype(np.float32)/255.
@@ -38,7 +42,12 @@ class keras_data(keras.utils.Sequence):
             print(e)
         # if self.image_set=='test':
         #     return img_t,mask_t
-        return img_t,mask_t
+        if hasattr(self,'softmask'):
+            softmask=self.softmask[item*self.batch_size:(item+1)*self.batch_size]
+
+            return img_t,[softmask,mask_t]
+        else:
+            return img_t,mask_t,
 
 
 def hist(label_true,label_pred,num_cls):
